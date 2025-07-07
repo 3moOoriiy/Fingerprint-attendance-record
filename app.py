@@ -5,6 +5,7 @@ import time
 import json
 import os
 from io import BytesIO
+import pytz
 
 # إعداد الصفحة
 st.set_page_config(
@@ -207,6 +208,13 @@ def create_excel_file(data):
     output.seek(0)
     return output
 
+# إعداد التوقيت المحلي للإسكندرية
+ALEXANDRIA_TZ = pytz.timezone('Africa/Cairo')
+
+def get_local_time():
+    """الحصول على التوقيت المحلي للإسكندرية"""
+    return datetime.now(ALEXANDRIA_TZ)
+
 # تهيئة البيانات في الجلسة
 if 'attendance_log' not in st.session_state:
     st.session_state.attendance_log = load_attendance_data()
@@ -221,7 +229,7 @@ if 'scanning' not in st.session_state:
 st.markdown('<div class="rtl main-title">🔐 نظام البصمة</div>', unsafe_allow_html=True)
 
 # قائمة الأشخاص
-users = ["Amr", "Rana", "Asmma", "Hadel", "Fatma"]
+users = ["Amr", "Rana", "Asmaa", "Hadel", "fatma"]
 
 # اختيار الشخص
 st.markdown('<div class="rtl"><h3>اختر الشخص:</h3></div>', unsafe_allow_html=True)
@@ -255,11 +263,12 @@ with col2:
                 time.sleep(2)  # محاكاة وقت المسح
             
             # تسجيل الحضور
-            now = datetime.now()
+            now = get_local_time()
             entry = {
                 'name': st.session_state.selected_user,
                 'time': now.strftime("%H:%M:%S"),
                 'date': now.strftime("%Y-%m-%d"),
+                'date_arabic': now.strftime("%d/%m/%Y"),
                 'timestamp': now.timestamp()
             }
             
@@ -279,10 +288,11 @@ if st.session_state.attendance_log:
     recent_logs = st.session_state.attendance_log[:10]
     
     for entry in recent_logs:
+        date_display = entry.get('date_arabic', entry['date'])
         st.markdown(f"""
         <div class="rtl log-entry">
             <div style="font-weight: bold; font-size: 1.1rem;">{entry['name']}</div>
-            <div style="opacity: 0.9;">{entry['date']} - {entry['time']}</div>
+            <div style="opacity: 0.9;">{date_display} - {entry['time']}</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -294,7 +304,7 @@ if st.session_state.attendance_log:
         st.metric("إجمالي السجلات", len(st.session_state.attendance_log))
     
     with col2:
-        today = datetime.now().strftime("%Y-%m-%d")
+        today = get_local_time().strftime("%Y-%m-%d")
         today_count = len([entry for entry in st.session_state.attendance_log if entry['date'] == today])
         st.metric("سجلات اليوم", today_count)
     
@@ -314,7 +324,7 @@ if st.session_state.attendance_log:
                 st.download_button(
                     label="تحميل ملف Excel",
                     data=excel_file,
-                    file_name=f"attendance_log_{datetime.now().strftime('%Y-%m-%d')}.xlsx",
+                    file_name=f"attendance_log_{get_local_time().strftime('%Y-%m-%d')}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
             else:
@@ -334,7 +344,7 @@ if st.session_state.attendance_log:
     # عرض الجدول التفصيلي
     if st.checkbox("عرض الجدول التفصيلي"):
         df = pd.DataFrame(st.session_state.attendance_log)
-        df = df[['name', 'date', 'time']]
+        df = df[['name', 'date_arabic', 'time']] if 'date_arabic' in df.columns else df[['name', 'date', 'time']]
         df.columns = ['الاسم', 'التاريخ', 'الوقت']
         st.dataframe(df, use_container_width=True)
 
@@ -356,7 +366,15 @@ with st.sidebar:
     ✅ إحصائيات فورية
     
     ✅ واجهة عربية
+    
+    🕐 التوقيت: الإسكندرية
     """)
+    
+    # عرض التوقيت الحالي
+    current_time = get_local_time()
+    st.markdown(f"**التوقيت الحالي:**")
+    st.markdown(f"📅 {current_time.strftime('%d/%m/%Y')}")
+    st.markdown(f"🕐 {current_time.strftime('%H:%M:%S')}")
     
     if st.button("🔄 تحديث الصفحة"):
         st.rerun()
