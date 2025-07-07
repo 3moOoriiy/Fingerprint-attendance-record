@@ -213,7 +213,11 @@ ALEXANDRIA_TZ = pytz.timezone('Africa/Cairo')
 
 def get_local_time():
     """الحصول على التوقيت المحلي للإسكندرية"""
-    return datetime.now(ALEXANDRIA_TZ)
+    # الحصول على التوقيت العالمي ثم تحويله للتوقيت المحلي
+    utc_time = datetime.utcnow()
+    utc_time = pytz.utc.localize(utc_time)
+    local_time = utc_time.astimezone(ALEXANDRIA_TZ)
+    return local_time
 
 # تهيئة البيانات في الجلسة
 if 'attendance_log' not in st.session_state:
@@ -229,7 +233,7 @@ if 'scanning' not in st.session_state:
 st.markdown('<div class="rtl main-title">🔐 نظام البصمة</div>', unsafe_allow_html=True)
 
 # قائمة الأشخاص
-users = ["Amr", "Rana", "Asmaa", "Hadel", "fatma"]
+users = ["Amr", "Rana", "Asmma", "Hadel", "Fatma"]
 
 # اختيار الشخص
 st.markdown('<div class="rtl"><h3>اختر الشخص:</h3></div>', unsafe_allow_html=True)
@@ -266,7 +270,8 @@ with col2:
             now = get_local_time()
             entry = {
                 'name': st.session_state.selected_user,
-                'time': now.strftime("%H:%M:%S"),
+                'time': now.strftime("%I:%M:%S %p"),
+                'time_24': now.strftime("%H:%M:%S"),
                 'date': now.strftime("%Y-%m-%d"),
                 'date_arabic': now.strftime("%d/%m/%Y"),
                 'timestamp': now.timestamp()
@@ -289,10 +294,11 @@ if st.session_state.attendance_log:
     
     for entry in recent_logs:
         date_display = entry.get('date_arabic', entry['date'])
+        time_display = entry.get('time', entry.get('time_24', 'غير محدد'))
         st.markdown(f"""
         <div class="rtl log-entry">
             <div style="font-weight: bold; font-size: 1.1rem;">{entry['name']}</div>
-            <div style="opacity: 0.9;">{date_display} - {entry['time']}</div>
+            <div style="opacity: 0.9;">{date_display} - {time_display}</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -344,9 +350,14 @@ if st.session_state.attendance_log:
     # عرض الجدول التفصيلي
     if st.checkbox("عرض الجدول التفصيلي"):
         df = pd.DataFrame(st.session_state.attendance_log)
-        df = df[['name', 'date_arabic', 'time']] if 'date_arabic' in df.columns else df[['name', 'date', 'time']]
-        df.columns = ['الاسم', 'التاريخ', 'الوقت']
-        st.dataframe(df, use_container_width=True)
+        # اختيار الأعمدة المناسبة
+        if 'date_arabic' in df.columns:
+            df_display = df[['name', 'date_arabic', 'time']].copy()
+        else:
+            df_display = df[['name', 'date', 'time']].copy()
+        
+        df_display.columns = ['الاسم', 'التاريخ', 'الوقت']
+        st.dataframe(df_display, use_container_width=True)
 
 else:
     st.info("📝 لا توجد سجلات حضور بعد")
@@ -372,11 +383,13 @@ with st.sidebar:
     
     # عرض التوقيت الحالي
     current_time = get_local_time()
-    st.markdown(f"**التوقيت الحالي:**")
+    st.markdown(f"**التوقيت الحالي (الإسكندرية):**")
     st.markdown(f"📅 {current_time.strftime('%d/%m/%Y')}")
-    st.markdown(f"🕐 {current_time.strftime('%H:%M:%S')}")
+    st.markdown(f"🕐 {current_time.strftime('%I:%M:%S %p')}")
+    st.markdown(f"🌍 المنطقة الزمنية: {current_time.tzinfo}")
     
-    if st.button("🔄 تحديث الصفحة"):
+    # إضافة زر تحديث الوقت
+    if st.button("🔄 تحديث الوقت"):
         st.rerun()
 
 # رسالة ترحيب للمستخدمين الجدد
