@@ -233,7 +233,7 @@ if 'scanning' not in st.session_state:
 st.markdown('<div class="rtl main-title">🔐 نظام البصمة</div>', unsafe_allow_html=True)
 
 # قائمة الأشخاص
-users = ["Amr", "Rana", "Asmma", "Hadel", "Fatma"]
+users = ["Amr", "Rana", "Farida", "Hadel", "Fatma"]
 
 # اختيار الشخص
 st.markdown('<div class="rtl"><h3>اختر الشخص:</h3></div>', unsafe_allow_html=True)
