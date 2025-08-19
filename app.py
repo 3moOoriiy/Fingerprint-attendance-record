@@ -230,7 +230,7 @@ if 'scanning' not in st.session_state:
     st.session_state.scanning = False
 
 # العنوان الرئيسي
-st.markdown('<div class="rtl main-title">🔐 نظام البصمة</div>', unsafe_allow_html=True)
+st.markdown('<div class="rtl main-title">🔐 Siwa_Fingerprint</div>', unsafe_allow_html=True)
 
 # قائمة الأشخاص
 users = ["Amr", "Rana", "Farida Ahmed", "Hadel", "Fatma","Farida Muhammed"]
