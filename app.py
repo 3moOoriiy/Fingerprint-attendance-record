@@ -9,7 +9,7 @@ import pytz
 
 # إعداد الصفحة
 st.set_page_config(
-    page_title="نظام البصمة",
+    page_title="Siwa_Fingerprint",
     page_icon="🔐",
     layout="centered",
     initial_sidebar_state="collapsed"
